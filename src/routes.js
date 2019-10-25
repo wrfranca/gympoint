@@ -5,6 +5,7 @@ import StudentController from './app/controllers/StudentController';
 import authMiddleware from './app/middlewares/auth';
 import PlanController from './app/controllers/PlanController';
 import EnrolmentController from './app/controllers/EnrolmentController';
+import CheckinController from './app/controllers/CheckinController';
 
 
 const routes = new Router();
@@ -26,5 +27,8 @@ routes.post('/enrolments', EnrolmentController.store);
 routes.get('/enrolments', EnrolmentController.index);
 routes.put('/enrolments/:id', EnrolmentController.update);
 routes.delete('/enrolments/:id', EnrolmentController.delete);
+
+routes.post('/students/:studentId/checkins/', CheckinController.store);
+routes.get('/students/:studentId/checkins/', CheckinController.index);
 
 export default routes;
