@@ -4,9 +4,22 @@ import { addMonths, parseISO } from 'date-fns'
 import Enrolment from '../models/Enrolment';
 import Student from '../models/Student';
 import Plan from '../models/Plan';
-
+import Queue from '../../lib/queue';
+import WelcomeJob from '../job/WelcomeMail';
 
 class EnrolmentController {
+
+  async index(req, res) {
+    const { page = 1 } = req.query;
+
+    const enrolments = await Enrolment.findAll({
+      limit: 20,
+      offset: (page - 1) * 20,
+      order: ['id']
+    });
+
+    return res.json(enrolments);
+  }
 
   async store(req, res) {
 
@@ -23,19 +36,19 @@ class EnrolmentController {
     const { student_id, plan_id, start_date } = req.body;
 
     const student = await Student.findByPk(student_id);
-    if (!student){
+    if (!student) {
       return res.status(400).json({ error: 'Student not found' });
     }
 
     const plan = await Plan.findByPk(plan_id);
-    if (!plan){
+    if (!plan) {
       return res.status(400).json({ error: 'Plan not found' });
     }
 
     const end_date = addMonths(parseISO(start_date), plan.duration);
     const price = plan.duration * plan.price;
 
-    const enrolment = await Enrolment.create({
+    const { id } = await Enrolment.create({
       student_id,
       plan_id,
       start_date,
@@ -43,7 +56,40 @@ class EnrolmentController {
       price
     });
 
+    const enrolment = await Enrolment.findOne(
+      {
+        where: { id },
+        include: [
+          { model: Student, attributes: ['name', 'email'] },
+          { model: Plan, attributes: ['title', 'duration', 'price'] }
+        ]
+      }
+    );
+
+    await Queue.add(WelcomeJob, { enrolment });
+
+    // Queue.processQueue();
+
     return res.json(enrolment);
+  }
+
+  async update(req, res) {
+    // TODO: Implementar o update
+    return res.json();
+  }
+
+  async delete(req, res) {
+
+    const { id } = req.params;
+
+    const enrolment = await Enrolment.findByPk(id);
+    if (!enrolment) {
+      return res.status(400).json({ error: 'Enrolment not found.' });
+    }
+
+    await enrolment.destroy()
+
+    return res.json({ message: 'Enrolment removed with sucess.' });
   }
 }
 
