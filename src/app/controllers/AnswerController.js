@@ -1,15 +1,19 @@
 import HelpOrder from '../models/HelpOrder';
+import Student from '../models/Student';
+import Queue from '../../lib/queue';
+import AnswerJob from '../job/AnswerMail';
 
 class AnswerController {
 
   async index(req, res) {
 
+    const pageSize = process.env.PAGE_SIZE;
     const { page = 1 } = req.query;
 
     const helps = await HelpOrder.findAll({
       where: { answer_at: null },
-      limit: 20,
-      offset: (page - 1) * 20,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
       order: ['created_at']
     });
 
@@ -25,8 +29,10 @@ class AnswerController {
       return res.status(400).json({ error: 'Answer no provider' });
     }
 
-    const helpOrder = await HelpOrder.findByPk(id);
-    if (!helpOrder){
+    const helpOrder = await HelpOrder.findByPk(id, {
+      include: [{ model: Student }]
+    });
+    if (!helpOrder) {
       return res.status(400).json({ error: 'Question not found' });
     }
 
@@ -34,6 +40,10 @@ class AnswerController {
       answer,
       answer_at: new Date()
     });
+
+    await Queue.add(AnswerJob, { helpOrder });
+
+    // Queue.processQueue();
 
     return res.json({
       id,

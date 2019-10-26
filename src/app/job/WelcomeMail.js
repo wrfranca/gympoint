@@ -7,10 +7,9 @@ class WelcomeMail {
   }
 
   async handle({ data }) {
-
     const { enrolment } = data;
 
-    await Mail.sendMail({
+    Mail.sendMail({
       to: `${enrolment.Student.name} <${enrolment.Student.email}>`,
       subject: `Bem Vindo ao Gympoint`,
       template: 'welcome',

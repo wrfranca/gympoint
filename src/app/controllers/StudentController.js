@@ -6,11 +6,12 @@ class StudentController {
 
   async index(req, res){
 
+    const pageSize = process.env.PAGE_SIZE;
     const { page = 1 } = req.query;
 
     const students = await Student.findAll({
-      limit: 20,
-      offset: (page - 1) * 20,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
       attributes: ['id', 'name', 'email', 'idade', 'peso', 'altura'],
       order: ['name']
     });

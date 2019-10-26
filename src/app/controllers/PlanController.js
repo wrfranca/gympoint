@@ -5,11 +5,12 @@ class PlanController {
 
   async index(req, res) {
 
+    const pageSize = process.env.PAGE_SIZE;
     const { page = 1 } = req.query;
 
     const plans = await Plan.findAll({
-      limit: 20,
-      offset: (page -1 ) * 20,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
       attributes: ['id', 'title', 'duration', 'price'],
       order: ['id']
     });
@@ -38,7 +39,7 @@ class PlanController {
     const { id } = req.params;
 
     let plan = await Plan.findByPk(id);
-    if (!plan){
+    if (!plan) {
       return res.status(400).json({ error: 'Plan not found.' });
     }
 
@@ -52,13 +53,13 @@ class PlanController {
     const { id } = req.params;
 
     const plan = await Plan.findByPk(id);
-    if (!plan){
+    if (!plan) {
       return res.status(400).json({ error: 'Plan not found.' });
     }
 
     await plan.destroy()
 
-    return res.json({message: 'plan removed with sucess.'});
+    return res.json({ message: 'Plan removed with sucess.' });
   }
 
 }
